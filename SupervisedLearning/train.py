@@ -5,7 +5,7 @@ import time
 from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
-from MLP import MLP
+from models import *
 from ginDataset import ginDataset
 from data_preprocess import *
 from visualize_data import *
@@ -84,24 +84,26 @@ def load_test_data(data_pth, numGames, state, action, pruneStatesList, actionCho
 
 
 ################################################# Load Model #################################################
-def load_model(lr=0.001, input_size=None, output_size=None, loss='MSE', weights=None, model=None, pre_train=False, model_PT=None, device='cpu'):
+def load_model(lr=0.001, input_size=None, output_size=None, model_fnc='MLP_base', activation='sig', loss='MSE', weights=None, pre_train=False, model_PT=None, device='cpu'):
+
+    if model_fnc == 'MLP_base':
+        model = MLP_base(input_size, output_size, activation).to(device)
+    
     if loss == 'CELoss':
         loss_fnc = torch.nn.CrossEntropyLoss(weight=weights.to(device))
     else:
         loss_fnc = torch.nn.MSELoss()
-    # if model is None:
-    model = MLP(input_size, output_size).to(device)
+    
     if pre_train:
         pre_train_model = torch.load(model_PT, map_location=device)
         model.l1.weight = pre_train_model.l1.weight.to(device)
         model.l1.bias = pre_train_model.l1.bias.to(device)
     optimizer = torch.optim.Adam(model.parameters(), lr=lr)
     return model, loss_fnc, optimizer
-    # return model, loss_fnc, _
 
 
 ################################################# Evaluate #################################################
-def evaluate(model, data_loader, loss_fnc, loss, device='cpu'):
+def evaluate(model, data_loader, loss_fnc=torch.nn.MSELoss(), loss='MSE', device='cpu'):
 
     total_corr = 0
     accum_loss = 0
@@ -128,13 +130,13 @@ def evaluate(model, data_loader, loss_fnc, loss, device='cpu'):
 
 
 ################################################# Train #################################################
-def train(train_loader, val_loader, plot_pth, batch_size=1000, lr=0.001, epochs=100, verbose=False, loss='MSE', weights=None, pre_train=False, model_PT=None, device='cpu'):
+def train(train_loader, val_loader, plot_pth, batch_size=1000, lr=0.001, epochs=100, verbose=False, model_fnc='MLP_base', activation='sig', loss='MSE', weights=None, pre_train=False, model_PT=None, device='cpu'):
 
     input_size = len(train_loader.dataset.features[0])
     output_size = len(val_loader.dataset.labels[0])
 
-    model, loss_fnc, optimizer = load_model(lr, input_size, output_size,
-    	loss=loss, weights=weights, pre_train=pre_train, model_PT=model_PT, device=device)
+    model, loss_fnc, optimizer = load_model(lr, input_size, output_size, model_fnc=model_fnc, activation=activation,
+        loss=loss, weights=weights, pre_train=pre_train, model_PT=model_PT, device=device)
     
     max_val_acc = 0
     min_val_loss = np.inf

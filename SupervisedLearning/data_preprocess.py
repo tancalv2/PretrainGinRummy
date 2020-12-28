@@ -1,5 +1,20 @@
 import numpy as np
 
+################################################# Loss Weights #################################################
+def lossWeights(actions, loss_weight=None): 
+    '''
+    Loss weights for each action/class, default weight is equal class weighting
+    '''
+    weights = np.ones(actions.shape[1])
+    if loss_weight == 'icf' or loss_weight == 'log_icf':
+        # adapted from https://github.com/ultralytics/yolov3/issues/249
+        weights = np.sum(actions, axis=0).astype(np.int) + 1    # get class weight frequency; pad each weight by 1
+        if loss_weight == 'log_icf':
+            weights = np.log(weights) + 1
+        weights = 1 / weights  # inverse frequency 
+        weights /= weights.sum()  # normalize 
+    return weights
+
 
 ################################################# Balance #################################################
 def balanceClasses(states, actions):

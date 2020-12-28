@@ -7,7 +7,7 @@ from sklearn.model_selection import train_test_split
 
 from MLP import MLP
 from ginDataset import ginDataset
-from data_process import *
+from data_preprocess import *
 from visualize_data import *
 from utils import state_action_pair, all_classes
 
@@ -22,7 +22,7 @@ def load_data(data, label, batch_size=1000, shuffle=False):
 
 
 ################################################# Load Test Data #################################################
-def load_train_data(data_pth, plot_pth, numGames, batch_size, state, action, pruneStatesList=[], actionChoice='all', balance=False, visualize=False):
+def load_train_data(data_pth, plot_pth, numGames, batch_size, state, action, pruneStatesList=[], actionChoice='all', balance=False, loss_weight=None, visualize=False):
     '''
     Load train data
     '''
@@ -40,7 +40,10 @@ def load_train_data(data_pth, plot_pth, numGames, batch_size, state, action, pru
         # balance classes
         if balance:
             states, actions = balanceClasses(states, actions)
-
+        
+        # obtain loss weights for each class/action
+        weights = lossWeights(actions, loss_weight=loss_weight)
+        
         # Visualize action classes distribution
         if visualize:
             visualizeClasses(plot_pth, actions, classes)
@@ -51,7 +54,7 @@ def load_train_data(data_pth, plot_pth, numGames, batch_size, state, action, pru
         train_loader = load_data(data_train, label_train, batch_size, shuffle=True)
         val_loader = load_data(data_val, label_val, batch_size, shuffle=False)
 
-        return train_loader, val_loader, classes
+        return train_loader, val_loader, torch.Tensor(weights), classes
     else:
         print('illegeal state-action pair')
         return _, _, _
@@ -81,8 +84,11 @@ def load_test_data(data_pth, numGames, state, action, pruneStatesList, actionCho
 
 
 ################################################# Load Model #################################################
-def load_model(lr=0.001, input_size=None, output_size=None, model=None, pre_train=False, model_PT=None, device='cpu'):
-    loss_fnc = torch.nn.MSELoss()
+def load_model(lr=0.001, input_size=None, output_size=None, loss='MSE', weights=None, model=None, pre_train=False, model_PT=None, device='cpu'):
+    if loss == 'CELoss':
+        loss_fnc = torch.nn.CrossEntropyLoss(weight=weights.to(device))
+    else:
+        loss_fnc = torch.nn.MSELoss()
     # if model is None:
     model = MLP(input_size, output_size).to(device)
     if pre_train:
@@ -95,7 +101,7 @@ def load_model(lr=0.001, input_size=None, output_size=None, model=None, pre_trai
 
 
 ################################################# Evaluate #################################################
-def evaluate(model, data_loader, loss_fnc, device='cpu'):
+def evaluate(model, data_loader, loss_fnc, loss, device='cpu'):
 
     total_corr = 0
     accum_loss = 0
@@ -105,13 +111,16 @@ def evaluate(model, data_loader, loss_fnc, device='cpu'):
         labels = labels.type(torch.FloatTensor).to(device)
 
         outputs = model(inputs)
-        batch_loss = loss_fnc(input=outputs, target=labels)
-
         target = torch.argmax(labels, axis=1)
         pred = torch.argmax(outputs, dim=1)
+        if loss == 'CELoss':
+            batch_loss = loss_fnc(input=outputs, target=target)
+        else:
+            batch_loss = loss_fnc(input=outputs, target=labels)
+        accum_loss += batch_loss
+
         corr = pred == target
         total_corr += int(corr.sum())
-        accum_loss += batch_loss
 
     acc = float(total_corr)/len(data_loader.dataset)
     loss = accum_loss/(i+1)
@@ -119,13 +128,13 @@ def evaluate(model, data_loader, loss_fnc, device='cpu'):
 
 
 ################################################# Train #################################################
-def train(train_loader, val_loader, plot_pth, batch_size=1000, lr=0.001, epochs=100, verbose=False, pre_train=False, model_PT=None, device='cpu'):
+def train(train_loader, val_loader, plot_pth, batch_size=1000, lr=0.001, epochs=100, verbose=False, loss='MSE', weights=None, pre_train=False, model_PT=None, device='cpu'):
 
     input_size = len(train_loader.dataset.features[0])
     output_size = len(val_loader.dataset.labels[0])
 
     model, loss_fnc, optimizer = load_model(lr, input_size, output_size,
-                                            pre_train=pre_train, model_PT=model_PT, device=device)
+    	loss=loss, weights=weights, pre_train=pre_train, model_PT=model_PT, device=device)
     
     max_val_acc = 0
     min_val_loss = np.inf
@@ -143,18 +152,22 @@ def train(train_loader, val_loader, plot_pth, batch_size=1000, lr=0.001, epochs=
             
             optimizer.zero_grad()
             outputs = model(inputs)
-            batch_loss = loss_fnc(input=outputs, target=labels)
+            
+            target = torch.argmax(labels, axis=1)
+            pred = torch.argmax(outputs, axis=1)
+            if loss == 'CELoss':
+                batch_loss = loss_fnc(input=outputs, target=target)
+            else:
+                batch_loss = loss_fnc(input=outputs, target=labels)
             accum_loss += batch_loss
             batch_loss.backward()
             optimizer.step()
 
-            target = torch.argmax(labels, axis=1)
-            pred = torch.argmax(outputs, dim=1)
             corr = pred == target
             total_corr += int(corr.sum())
 
         # evaluate per epoch
-        vacc, vloss = evaluate(model, val_loader, loss_fnc, device)
+        vacc, vloss = evaluate(model, val_loader, loss_fnc, loss, device)
         val_acc.append(vacc)
         val_loss.append(vloss)
         train_loss.append(accum_loss.item()/(i+1))

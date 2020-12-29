@@ -6,12 +6,18 @@ import itertools
 
 
 def visualizeClasses(plot_pth, actions, classes):
-    actions_count = np.sum(actions, axis=0)
-    plt.figure(figsize=(30,30))
+    actions_count = np.sum(actions, axis=0).astype(np.int)
+    x_pos = [i for i, _ in enumerate(actions_count)]
+    if len(x_pos) >= 52:
+        plt.figure(figsize=(50,10))
     plt.title("Class Distribution", fontsize=14)
     plt.xlabel("Actions", fontsize=12)
     plt.ylabel("Count", fontsize=12)
-    plt.bar(classes, actions_count, log=True)
+    plt.bar(x_pos, actions_count, log=True)
+    for i, count in enumerate(actions_count):
+        if count != 0:
+            plt.text(i, count, str(count), horizontalalignment='center')
+    plt.xticks(x_pos, classes)
     plt.savefig('{}/action_count.png'.format(plot_pth),bbox_inches='tight')
     plt.show()
     plt.close()

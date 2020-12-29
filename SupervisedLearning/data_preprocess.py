@@ -89,7 +89,7 @@ def chooseActions(actions, classes, actionChoice):
     if actionChoice == 'all':
         return actions, classes
     elif actionChoice == 'draw':
-        return actions[:,2:4], classes[2:4]
+        return actions[:,2:4], ["Draw", "Pickup"]
     elif actionChoice == 'discard':
         return actions[:,6:58], classes[6:58]
     elif actionChoice == 'knock':

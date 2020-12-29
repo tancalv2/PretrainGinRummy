@@ -3,6 +3,7 @@ import torch
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 import itertools
+from utils import *
 
 def visualizeClasses(plot_pth, actions, classes, group=['All','b','all']):
     actions_count = np.sum(actions, axis=0).astype(np.int)
@@ -40,7 +41,7 @@ def plotTrain(plot_pth, train, val, epoch, label, bs, lr):
     plt.close()
 
 
-def evaluate_confusion_matrix(model, data_loader, device):
+def evaluate_confusion_matrix(model, data_loader, device, class_group=None):
     """
     Run the model on the test set and generate the confusion matrix.
 
@@ -50,6 +51,11 @@ def evaluate_confusion_matrix(model, data_loader, device):
     Returns:
         cm: A NumPy array denoting the confusion matrix
     """
+    # Check if CM is two class
+    if class_group in ['draw','discard','knock']:
+        class_dict = class_groups[class_group]
+        ind = class_dict['ind']
+
     val_labels = np.array([], dtype=np.int64)
     val_preds = np.array([], dtype=np.int64)
 
@@ -60,21 +66,33 @@ def evaluate_confusion_matrix(model, data_loader, device):
         voutputs = model(vinputs)
         vguess = torch.argmax(voutputs.cpu(), dim=1)
         vlabels = torch.argmax(vlabels.cpu(), dim=1)
+
+        # Binary Class Outputs
+        if class_group in ['draw','discard','knock']:
+            # invert since False is the class_group
+            vguess = ~((vguess >= ind[0]) * (vguess < ind[1]))
+            vlabels = ~((vlabels >= ind[0]) * (vlabels < ind[1]))
+
         val_labels = np.concatenate((val_labels, vlabels))
         val_preds = np.concatenate((val_preds, vguess))
     
     # cm = confusion_matrix(val_labels, val_preds)
-    cm_temp = np.zeros([voutputs.shape[1],voutputs.shape[1]], dtype=np.int64)
-    for i in range(len(val_labels)):
-        cm_temp[val_labels[i]][val_preds[i]] += 1
-    cm = cm_temp
-    print('Accuracy: {:.2f}'.format(100*(val_labels == val_preds).sum() /len(val_labels)))
+    if class_group in ['draw','discard','knock']:
+        cm = confusion_matrix(val_labels, val_preds)
+        # cm_temp = np.zeros([2,2], dtype=np.int64)
+    else:    
+        cm_temp = np.zeros([voutputs.shape[1],voutputs.shape[1]], dtype=np.int64)
+
+        for i in range(len(val_labels)):
+            cm_temp[val_labels[i]][val_preds[i]] += 1
+        cm = cm_temp
+    print('Accuracy: {:.2f}'.format(100*(val_labels == val_preds).sum()/len(val_labels)))
     return cm
 
 
 # Function based off
 # http://scikit-learn.org/stable/auto_examples/model_selection/plot_confusion_matrix.html#sphx-glr-auto-examples-model-selection-plot-confusion-matrix-py
-def plot_confusion_matrix(plot_pth, cm, classes, numGames, mode,
+def plot_confusion_matrix(plot_pth, cm, classes, numGames, mode, class_group=None,
                           normalize=True,
                           title='Confusion matrix',
                           cmap=plt.cm.Blues):
@@ -93,6 +111,7 @@ def plot_confusion_matrix(plot_pth, cm, classes, numGames, mode,
     # plot name
     plot_name = '{}/CM_G_{}k'.format(plot_pth,numGames//1000)
     plot_name = '{}_{}'.format(plot_name,mode) if mode != 'full' else plot_name
+    plot_name = '{}_{}'.format(plot_name, class_group) if class_group in ['draw','discard','knock'] else plot_name
 
     # normalize
     if normalize:
@@ -132,14 +151,19 @@ def plot_confusion_matrix(plot_pth, cm, classes, numGames, mode,
     return
 
 
-def plot_cm(plot_pth, classes, model, data_loader, device, numGames, mode='full'):
+def plot_cm(plot_pth, classes, model, data_loader, device, numGames, mode='full', class_group=None):
 
-    cm = evaluate_confusion_matrix(model, data_loader, device)
-    plot_confusion_matrix(plot_pth, cm, classes, numGames, mode,
+    # Check if CM is two class
+    if class_group in ['draw','discard','knock']:
+        print('{}'.format(class_group))
+        class_dict = class_groups[class_group]
+        classes = class_dict['classes']
+    cm = evaluate_confusion_matrix(model, data_loader, device, class_group)
+    plot_confusion_matrix(plot_pth, cm, classes, numGames, mode, class_group,
                         normalize=True,
                         title='Confusion matrix',
                         cmap=plt.cm.Blues)
-    plot_confusion_matrix(plot_pth, cm, classes, numGames, mode,
+    plot_confusion_matrix(plot_pth, cm, classes, numGames, mode, class_group,
                         normalize=False,
                         title='Confusion matrix',
                         cmap=plt.cm.Blues)

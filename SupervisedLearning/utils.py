@@ -18,6 +18,14 @@ all_classes = ['SP0','SP1','Draw','Pickup','DH','GIN',
                'AD', '2D', '3D', '4D', '5D', '6D', '7D', '8D', '9D', 'TD', 'JD', 'QD', 'KD',
                'AC', '2C', '3C', '4C', '5C', '6C', '7C', '8C', '9C', 'TC', 'JC', 'QC', 'KC']
 
+# Class Groups and start/stop indices
+class_groups = {'draw': {'ind': [2,4], 
+                         'classes': ['Draw/Pickup', 'Other']},
+                'discard': {'ind': [6,58],
+                            'classes': ['Discard Action', 'Other']},
+                'knock': {'ind': [58,110],
+                          'classes': ['Knock Action', 'Other']}}
+
 
 ################################################# Create Directories #################################################
 def create_dir(pth, state, action, model_name):

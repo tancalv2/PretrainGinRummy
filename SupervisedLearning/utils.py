@@ -8,7 +8,7 @@ state_action_pair = {'all': 'all', # all actions
                     'apad': 'knock_bin'} # binary action
 
 # All Possible Classes
-all_classes = ['SP0','SP1','DRW','PU','DH','GIN',
+all_classes = ['SP0','SP1','Draw','Pickup','DH','GIN',
                'AS', '2S', '3S', '4S', '5S', '6S', '7S', '8S', '9S', 'TS', 'JS', 'QS', 'KS',
                'AH', '2H', '3H', '4H', '5H', '6H', '7H', '8H', '9H', 'TH', 'JH', 'QH', 'KH',
                'AD', '2D', '3D', '4D', '5D', '6D', '7D', '8D', '9D', 'TD', 'JD', 'QD', 'KD',
@@ -47,6 +47,7 @@ def create_dir(pth, state, action, model_name):
 
 	# data directory
 	data_pth = '{}/data/{}/{}'.format(pth,state,action)
+	print('Directories created.')
 
 	return data_pth, model_pth, plot_pth
 

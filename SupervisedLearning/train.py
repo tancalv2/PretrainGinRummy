@@ -6,6 +6,7 @@ from torch.utils.data import DataLoader
 from sklearn.model_selection import train_test_split
 
 from models import *
+from MLP import *
 from ginDataset import ginDataset
 from data_preprocess import *
 from visualize_data import *
@@ -42,14 +43,16 @@ def load_train_data(data_pth, plot_pth, numGames, batch_size, state, action, pru
             states, actions = balanceClasses(states, actions)
         
         # obtain loss weights for each class/action
-        weights = lossWeights(actions, loss_weight=loss_weight)
+        weights = lossWeights(actions, loss_weight)
         
-        # Visualize action classes distribution
-        if visualize:
-            visualizeClasses(plot_pth, actions, classes)
-
         # split train/val
         data_train, data_val, label_train, label_val = train_test_split(states, actions, test_size=0.3, random_state=421)
+
+        # Visualize action classes distribution for all, train, and validation splits
+        if visualize:
+            visualizeClasses(plot_pth, actions, classes, ['All', 'b', 'all'])
+            visualizeClasses(plot_pth, label_train, classes, ['Train Split', 'g', 'train'])
+            visualizeClasses(plot_pth, label_val, classes, ['Validation Split', 'r', 'val'])
 
         train_loader = load_data(data_train, label_train, batch_size, shuffle=True)
         val_loader = load_data(data_val, label_val, batch_size, shuffle=False)

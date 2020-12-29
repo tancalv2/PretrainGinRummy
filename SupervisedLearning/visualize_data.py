@@ -4,23 +4,22 @@ import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 import itertools
 
-
-def visualizeClasses(plot_pth, actions, classes):
+def visualizeClasses(plot_pth, actions, classes, group=['All','b','all']):
     actions_count = np.sum(actions, axis=0).astype(np.int)
     num_classes = len(actions_count)
     y_pos = [num_classes - i - 1 for i, _ in enumerate(actions_count)]
     if len(y_pos) >= 52:
         plt.figure(figsize=(20,30))
-    plt.title("Class Distribution", fontsize=14)
+    plt.title("Class Distribution for {}".format(group[0]), fontsize=14)
     plt.xlabel("Count", fontsize=12)
     plt.ylabel("Actions", fontsize=12)
     plt.ylim([-1, num_classes+1])
-    plt.barh(y_pos, actions_count, log=True)
+    plt.barh(y_pos, actions_count, log=True, color=group[1])
     for i, count in enumerate(actions_count):
         if count != 0:
             plt.text(count, num_classes - i - 1, str(count), verticalalignment='center')
     plt.yticks(y_pos, classes)
-    plt.savefig('{}/action_count.png'.format(plot_pth),bbox_inches='tight')
+    plt.savefig('{}/action_count_{}.png'.format(plot_pth,group[2]),bbox_inches='tight')
     plt.show()
     plt.close()
 

@@ -89,9 +89,11 @@ def load_test_data(data_pth, numGames, state, action, pruneStatesList, actionCho
 ################################################# Load Model #################################################
 def load_model(lr=0.001, input_size=None, output_size=None, model_fnc='MLP_base', activation='sig', loss='MSE', weights=None, pre_train=False, model_PT=None, device='cpu'):
 
-    if model_fnc == 'MLP_base':
+    if model_fnc == 'MLP_2HL':
+        model = MLP_2HL(input_size, output_size, activation).to(device)
+    else:
         model = MLP_base(input_size, output_size, activation).to(device)
-    
+        
     if loss == 'CELoss':
         loss_fnc = torch.nn.CrossEntropyLoss(weight=weights.to(device))
     else:

@@ -1,0 +1,25 @@
+State: all
+Action: all
+
+model_name: all_states_all_actions_CE_icf
+
+numGames: 8000
+
+pruneStatesList: []
+actionChoice: all
+balance: False
+
+batch_size: 1000
+lr: 0.01
+epochs: 200
+
+model_fnc: MLP_base
+activation: sig
+
+loss: CELoss
+loss_weight: icf
+
+pre_train: False
+model_PT: 
+
+device: cuda

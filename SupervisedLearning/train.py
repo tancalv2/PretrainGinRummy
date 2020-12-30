@@ -84,11 +84,11 @@ def load_train_data(data_pth, plot_pth, numGames, batch_size, pruneStatesList=[]
 
 
 ################################################# Load Test Data #################################################
-def load_test_data(data_pth, numGames, state, action, pruneStatesList, actionChoice):
+def load_test_data(data_pth, numGames, pruneStatesList, actionChoice):
     '''
     Load test data
     '''
-    if action in state_action_pair[state]:
+    if data_pth is not None:
         print('loading {} games dataset from {}'.format(numGames, data_pth))
         states_test = np.load('{}/s_{}k.npy'.format(data_pth, numGames//1000))
         actions_test = np.load('{}/a_{}k.npy'.format(data_pth, numGames//1000))
@@ -101,7 +101,7 @@ def load_test_data(data_pth, numGames, state, action, pruneStatesList, actionCho
         test_loader = load_data(states_test, actions_test)
         return test_loader, classes
     else:
-        print('illegeal state-action pair')
+        print('incorrect data path')
         return _, _
 
 

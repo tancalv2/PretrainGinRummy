@@ -20,7 +20,8 @@ def visualizeClasses(plot_pth, actions, classes, group=['All','b','all']):
         if count != 0:
             plt.text(count, num_classes - i - 1, str(count), verticalalignment='center')
     plt.yticks(y_pos, classes)
-    plt.savefig('{}/action_count_{}.png'.format(plot_pth,group[2]),bbox_inches='tight')
+    if plot_pth != '' and plot_pth != None:
+        plt.savefig('{}/action_count_{}.png'.format(plot_pth,group[2]),bbox_inches='tight')
     plt.show()
     plt.close()
 
@@ -36,7 +37,8 @@ def plotTrain(plot_pth, train, val, epoch, label, bs, lr):
     plt.plot(epoch, val[epoch], marker='o', color="red", label="{}: {:.4f}"
              .format(label, val[epoch]))
     plt.legend()
-    plt.savefig('{}/{}_bs_{}_lr_{}.png'.format(plot_pth,label,bs,lr),bbox_inches='tight')
+    if plot_pth != '' and plot_pth != None:
+        plt.savefig('{}/{}_bs_{}_lr_{}.png'.format(plot_pth,label,bs,lr),bbox_inches='tight')
     plt.show()
     plt.close()
 
@@ -143,8 +145,9 @@ def plot_confusion_matrix(plot_pth, cm, classes, numGames, mode, class_group=Non
     plt.tight_layout()
     plt.ylabel('True label')
     plt.xlabel('Predicted label')
-           
-    plt.savefig(plot_name,bbox_inches='tight')
+    
+    if plot_pth != '' and plot_pth != None:
+        plt.savefig(plot_name,bbox_inches='tight')
     if cm.shape[0] < 53:
         plt.show()
     plt.close()

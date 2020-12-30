@@ -68,7 +68,17 @@ def create_dir(pth, state, action, model_name):
 
 
 ################################################# Write Parameters #################################################
-def write_params(pth, state, action, model_name, numGames, pruneStatesList, actionChoice, balance, batch_size, lr, epochs, model_fnc, activation, loss, loss_weight, pre_train, model_PT, device):
+def write_params(pth, state, action, 
+                 model_name, 
+                 numGames=8000, 
+                 pruneStatesList=[], actionChoice='all', 
+                 balance=False, 
+                 batch_size=1000, lr=0.001, epochs=200, 
+                 model_fnc='MLP_base', activation='sig', 
+                 loss='MSE', loss_weight=None, 
+                 pre_train=False, model_PT='', 
+                 device='cpu', 
+                 multi_data_pth={}):
 	
 	model_pth = '{}/models/{}'.format(pth,state)
 	model_pth = '{}/{}'.format(model_pth,action)
@@ -101,6 +111,7 @@ def write_params(pth, state, action, model_name, numGames, pruneStatesList, acti
 		f.write('pre_train: {}\n'.format(pre_train))
 		f.write('model_PT: {}\n\n'.format(model_PT))
 		f.write('device: {}\n'.format(device))
+		f.write('multi_data_pth: {}\n'.format(multi_data_pth))
 		f.close()
 
 	# Delete old version from plots directory
@@ -110,3 +121,4 @@ def write_params(pth, state, action, model_name, numGames, pruneStatesList, acti
 	# Copy params txt file to plots directory
 	copyfile(model_pth, plot_pth)
 	print('Parameters written.')
+

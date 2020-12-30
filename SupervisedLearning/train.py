@@ -33,17 +33,23 @@ def load_train_data(data_pth, plot_pth, numGames, batch_size, pruneStatesList=[]
         actions = np.load('{}/a_{}k.npy'.format(data_pth, numGames//1000))
 
         # check for additional data paths
-        for key, data_pth2 in multi_data_pth.items():
-            if os.path.exists(data_pth2):
-                print('concatenating {} dataset from "{}"'.format(key, data_pth2))
-                states2 = np.load('{}/s_{}k.npy'.format(data_pth2, numGames//1000))
-                states = np.concatenate((states, states2))
-                del states2
-                actions2 = np.load('{}/a_{}k.npy'.format(data_pth2, numGames//1000))
-                actions = np.concatenate((actions, actions2))
-                del actions2
-            else:
-                print('Path "{}" does not exist'.format(data_pth2))
+        for key, data_pth_dict in multi_data_pth.items():
+            try:
+                data_pth2 = data_pth_dict['data_pth']
+                numGames2 = data_pth_dict['numGames']
+                if os.path.exists(data_pth2):
+                    print('concatenating {} dataset ({} games) from "{}"'.format(key, numGames2, data_pth2))
+                    states2 = np.load('{}/s_{}k.npy'.format(data_pth2, numGames2//1000))
+                    print('Number of rows added: {}'.format(states2.shape[0]))
+                    states = np.concatenate((states, states2))
+                    del states2
+                    actions2 = np.load('{}/a_{}k.npy'.format(data_pth2, numGames2//1000))
+                    actions = np.concatenate((actions, actions2))
+                    del actions2
+                else:
+                    print('Path "{}" does not exist'.format(data_pth2))
+            except:
+                print('Invalid data path dictionary')
 
         # prune states
         states = pruneStates(states, pruneStatesList)

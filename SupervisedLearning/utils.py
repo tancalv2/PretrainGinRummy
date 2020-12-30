@@ -29,35 +29,42 @@ class_groups = {'draw': {'ind': [2,4],
 
 ################################################# Create Directories #################################################
 def create_dir(pth, state, action, model_name):
-	# create model and plot directories if do not exist
+	'''
+	create model and plot directories if do not exist
+    '''
+	if state in ['all','bpbd','apbd','apad']:
+		if action in state_action_pair[state]:
+			# model directories
+			state_pth = '{}/models/{}'.format(pth,state)
+			if not os.path.exists(state_pth):
+				os.mkdir(state_pth)
+			action_pth = '{}/{}'.format(state_pth,action)
+			if not os.path.exists(action_pth):
+				os.mkdir(action_pth)
+			model_pth = '{}/{}'.format(action_pth,model_name)
+			if not os.path.exists(model_pth):
+				os.mkdir(model_pth)
+			# plot directories
+			state_pth = '{}/plots/{}'.format(pth,state)
+			if not os.path.exists(state_pth):
+				os.mkdir(state_pth)
+			action_pth = '{}/{}'.format(state_pth,action)
+			if not os.path.exists(action_pth):
+				os.mkdir(action_pth)
+			plot_pth = '{}/{}'.format(action_pth,model_name)
+			if not os.path.exists(plot_pth):
+				os.mkdir(plot_pth)
+			# data directory
+			data_pth = '{}/data/{}/{}'.format(pth,state,action)
+			print('Directories created.')
 
-	# model directories
-	state_pth = '{}/models/{}'.format(pth,state)
-	if not os.path.exists(state_pth):
-	    os.mkdir(state_pth)
-	action_pth = '{}/{}'.format(state_pth,action)
-	if not os.path.exists(action_pth):
-	    os.mkdir(action_pth)
-	model_pth = '{}/{}'.format(action_pth,model_name)
-	if not os.path.exists(model_pth):
-	    os.mkdir(model_pth)
-
-	# plot directories
-	state_pth = '{}/plots/{}'.format(pth,state)
-	if not os.path.exists(state_pth):
-	    os.mkdir(state_pth)
-	action_pth = '{}/{}'.format(state_pth,action)
-	if not os.path.exists(action_pth):
-	    os.mkdir(action_pth)
-	plot_pth = '{}/{}'.format(action_pth,model_name)
-	if not os.path.exists(plot_pth):
-	    os.mkdir(plot_pth)
-
-	# data directory
-	data_pth = '{}/data/{}/{}'.format(pth,state,action)
-	print('Directories created.')
-
-	return data_pth, model_pth, plot_pth
+			return data_pth, model_pth, plot_pth
+		else:	
+			print('illegal state-action pair (action)')
+			return None, None, None
+	else:
+		print('illegal state-action pair (state)')
+		return None, None, None
 
 
 ################################################# Write Parameters #################################################

@@ -23,14 +23,27 @@ def load_data(data, label, batch_size=1000, shuffle=False):
 
 
 ################################################# Load Test Data #################################################
-def load_train_data(data_pth, plot_pth, numGames, batch_size, state, action, pruneStatesList=[], actionChoice='all', balance=False, loss_weight=None, visualize=False):
+def load_train_data(data_pth, plot_pth, numGames, batch_size, pruneStatesList=[], actionChoice='all', balance=False, loss_weight=None, multi_data_pth={}, visualize=False):
     '''
     Load train data
     '''
-    if action in state_action_pair[state]:
-        print('loading {} games dataset from {}'.format(numGames, data_pth))
+    if data_pth is not None:
+        print('loading {} games dataset from "{}"'.format(numGames, data_pth))
         states = np.load('{}/s_{}k.npy'.format(data_pth, numGames//1000))
         actions = np.load('{}/a_{}k.npy'.format(data_pth, numGames//1000))
+
+        # check for additional data paths
+        for key, data_pth2 in multi_data_pth.items():
+            if os.path.exists(data_pth2):
+                print('concatenating {} dataset from "{}"'.format(key, data_pth2))
+                states2 = np.load('{}/s_{}k.npy'.format(data_pth2, numGames//1000))
+                states = np.concatenate((states, states2))
+                del states2
+                actions2 = np.load('{}/a_{}k.npy'.format(data_pth2, numGames//1000))
+                actions = np.concatenate((actions, actions2))
+                del actions2
+            else:
+                print('Path "{}" does not exist'.format(data_pth2))
 
         # prune states
         states = pruneStates(states, pruneStatesList)
@@ -59,8 +72,8 @@ def load_train_data(data_pth, plot_pth, numGames, batch_size, state, action, pru
 
         return train_loader, val_loader, torch.Tensor(weights), classes
     else:
-        print('illegeal state-action pair')
-        return _, _, _
+        print('incorrect data path')
+        return None, None, None, None
     
 
 
@@ -93,7 +106,7 @@ def load_model(lr=0.001, input_size=None, output_size=None, model_fnc='MLP_base'
         model = MLP_2HL(input_size, output_size, activation).to(device)
     else:
         model = MLP_base(input_size, output_size, activation).to(device)
-        
+
     if loss == 'CELoss':
         loss_fnc = torch.nn.CrossEntropyLoss(weight=weights.to(device))
     else:

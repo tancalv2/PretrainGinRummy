@@ -21,6 +21,12 @@ OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
 '''
 
+'''
+Change Log
+2021-01-05      added extra parameter 'batch_norm' to DQNAgent, Estimator, EstimatorNetwork classes
+                to allow user to select if want prior batch normalization
+'''
+
 import numpy as np
 import torch
 import torch.nn as nn
@@ -53,7 +59,8 @@ class DQNAgent(object):
                  train_every=1,
                  mlp_layers=None,
                  learning_rate=0.00005,
-                 device=None):
+                 device=None,
+                 batch_norm=False):
 
         '''
         Q-Learning algorithm for off-policy TD control using Function Approximation.
@@ -88,6 +95,7 @@ class DQNAgent(object):
         self.batch_size = batch_size
         self.action_num = action_num
         self.train_every = train_every
+        self.batch_norm = batch_norm
 
         # Torch device
         if device is None:
@@ -106,9 +114,9 @@ class DQNAgent(object):
 
         # Create estimators
         self.q_estimator = Estimator(action_num=action_num, learning_rate=learning_rate, state_shape=state_shape, \
-            mlp_layers=mlp_layers, device=self.device)
+            mlp_layers=mlp_layers, device=self.device, batch_norm=self.batch_norm)
         self.target_estimator = Estimator(action_num=action_num, learning_rate=learning_rate, state_shape=state_shape, \
-            mlp_layers=mlp_layers, device=self.device)
+            mlp_layers=mlp_layers, device=self.device, batch_norm=self.batch_norm)
 
         # Create replay memory
         self.memory = Memory(replay_memory_size, batch_size)
@@ -236,7 +244,7 @@ class Estimator(object):
     This network is used for both the Q-Network and the Target Network.
     '''
 
-    def __init__(self, action_num=2, learning_rate=0.001, state_shape=None, mlp_layers=None, device=None):
+    def __init__(self, action_num=2, learning_rate=0.001, state_shape=None, mlp_layers=None, device=None, batch_norm=False):
         ''' Initilalize an Estimator object.
         Args:
             action_num (int): the number output actions
@@ -249,9 +257,10 @@ class Estimator(object):
         self.state_shape = state_shape
         self.mlp_layers = mlp_layers
         self.device = device
+        self.batch_norm = batch_norm
 
         # set up Q model and place it in eval mode
-        qnet = EstimatorNetwork(action_num, state_shape, mlp_layers)
+        qnet = EstimatorNetwork(action_num, state_shape, mlp_layers, batch_norm)
         qnet = qnet.to(self.device)
         self.qnet = qnet
         self.qnet.eval()
@@ -325,7 +334,7 @@ class EstimatorNetwork(nn.Module):
         (OLD) It is just a series of tanh layers. All in/out are torch.tensor
     '''
 
-    def __init__(self, action_num=2, state_shape=None, mlp_layers=None):
+    def __init__(self, action_num=2, state_shape=None, mlp_layers=None, batch_norm=False):
         ''' Initialize the Q network
         Args:
             action_num (int): number of legal actions
@@ -337,11 +346,13 @@ class EstimatorNetwork(nn.Module):
         self.action_num = action_num
         self.state_shape = state_shape
         self.mlp_layers = mlp_layers
+        self.batch_norm = batch_norm
 
         # build the Q network
         layer_dims = [np.prod(self.state_shape)] + self.mlp_layers
         fc = [nn.Flatten()]
-        # fc.append(nn.BatchNorm1d(layer_dims[0]))
+        if batch_norm:
+            fc.append(nn.BatchNorm1d(layer_dims[0]))
         for i in range(len(layer_dims)-1):
             fc.append(nn.Linear(layer_dims[i], layer_dims[i+1], bias=True))
             fc.append(nn.Sigmoid())

@@ -15,3 +15,4 @@ if 'torch' in installed_packages:
     from rlcard.agents.dqn_agent_pytorch import DQNAgent as DQNAgentPytorch
 
 from rlcard.agents.random_agent import RandomAgent
+from rlcard.agents.simpleGinRummy_agent import SimpleGinRummyAgent

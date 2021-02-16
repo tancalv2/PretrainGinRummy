@@ -84,7 +84,7 @@ def get_payoff_gin_rummy_v1(player: GinRummyPlayer, game: 'GinRummyGame') -> flo
 
 
 # increased payoff for knock action (doubled)
-def get_payoff_gin_rummy_v2(player: GinRummyPlayer, game: 'GinRummyGame') -> float:
+def get_payoff_gin_rummy_v2(player: GinRummyPlayer, game: 'GinRummyGame', knock_payoff=0.2) -> float:
     ''' Get the payoff of player:
             a) 1.0 if player gins
             b) 0.4 if player knocks
@@ -102,7 +102,7 @@ def get_payoff_gin_rummy_v2(player: GinRummyPlayer, game: 'GinRummyGame') -> flo
     going_out_action = game.round.going_out_action
     going_out_player_id = game.round.going_out_player_id
     if going_out_player_id == player.player_id and isinstance(going_out_action, KnockAction):
-        payoff = 0.4
+        payoff = knock_payoff
     elif going_out_player_id == player.player_id and isinstance(going_out_action, GinAction):
         payoff = 1
     else:

@@ -9,6 +9,7 @@ DEFAULT_CONFIG = {
         'active_player' : 0,
         'record_action' : False,
         'seed': None,
+        'payoff_fnc': None,
         'env_num': 1,
         }
 

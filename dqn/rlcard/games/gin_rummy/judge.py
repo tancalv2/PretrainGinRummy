@@ -24,12 +24,14 @@ class GinRummyJudge(object):
         Judge decides legal actions for current player
     '''
 
-    def __init__(self, game: 'GinRummyGame'):
+    # def __init__(self, game: 'GinRummyGame'):
+    def __init__(self, game: 'GinRummyGame', payoff_fnc=None):
         ''' Initialize the class GinRummyJudge
         :param game: GinRummyGame
         '''
         self.game = game
-        self.scorer = GinRummyScorer()
+        # self.scorer = GinRummyScorer()
+        self.scorer = GinRummyScorer(get_payoff=payoff_fnc)
 
     def get_legal_actions(self) -> List[ActionEvent]:
         """

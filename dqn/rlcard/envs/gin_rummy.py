@@ -19,7 +19,11 @@ class GinRummyEnv(Env):
         self._utils = utils
 
         self.name = 'gin-rummy'
-        self.game = Game()
+        if 'payoff_fnc' in config: 
+            self.game = Game(payoff_fnc=config['payoff_fnc'])
+        else:
+            self.game = Game()
+        # self.game = Game()
         super().__init__(config=config)
         self.state_shape = [5, 52]
 

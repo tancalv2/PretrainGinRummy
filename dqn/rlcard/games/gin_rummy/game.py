@@ -20,12 +20,14 @@ class GinRummyGame(Game):
     ''' Game class. This class will interact with outer environment.
     '''
 
-    def __init__(self, allow_step_back=False):
+    # def __init__(self, allow_step_back=False):
+    def __init__(self, allow_step_back=False, payoff_fnc=None):
         '''Initialize the class GinRummyGame
         '''
         self.allow_step_back = allow_step_back
         self.np_random = np.random.RandomState()
-        self.judge = GinRummyJudge(game=self)
+        # self.judge = GinRummyJudge(game=self)
+        self.judge = GinRummyJudge(game=self, payoff_fnc=payoff_fnc)
         self.settings = Settings()
         self.actions = None  # type: List[ActionEvent] or None # must reset in init_game
         self.round = None  # round: GinRummyRound or None, must reset in init_game

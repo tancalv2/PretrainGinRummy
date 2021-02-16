@@ -2,7 +2,7 @@ import numpy as np
 from random import randint
 
 from rlcard.core import Card, Card2
-from rlcard.GinRummyUtil import GinRummyUtil
+from rlcard.GinRummyUtil import *
 
 class SimpleGinRummyAgent(object):
     ''' A random agent. Random agents is for running toy examples on the card games
@@ -52,13 +52,15 @@ class SimpleGinRummyAgent(object):
                 faceUpCardState = states[1,:]
                 faceUpCardind = np.where(faceUpCardState == 1)[0]
                 faceUpCard = Card2(int(faceUpCardind%13), int(faceUpCardind//13))
-                newCards = list(currHand)
+                newCards = currHand
                 newCards.append(faceUpCard)
                 for meld in GinRummyUtil.cardsToAllMelds(newCards):
-                    if faceUpCard in meld and 3 in state['legal_actions']:
-                        print('pick up face up')
-                        # pick up card
-                        return 3 
+                    if 3 in state['legal_actions']:
+                        for c in meld:
+                            if str(faceUpCard) == str(c):
+                                # print('pick up face up')
+                                # pick up card
+                                return 3 
                 if 2 in state['legal_actions']:
                     # print('draw from deck')
                     return 2
@@ -71,8 +73,10 @@ class SimpleGinRummyAgent(object):
                     remainingCards = list(currHand)
                     remainingCards.remove(card)
                     bestMeldSets = GinRummyUtil.cardsToBestMeldSets(remainingCards)
-                    deadwood = GinRummyUtil.getDeadwoodPoints3(remainingCards) if len(bestMeldSets) == 0 \
-                        else GinRummyUtil.getDeadwoodPoints1(bestMeldSets[0], remainingCards)
+                    if len(bestMeldSets) == 0:
+                        deadwood = GinRummyUtil.getDeadwoodPoints3(remainingCards)
+                    else:
+                        deadwood = GinRummyUtil.getDeadwoodPoints1(bestMeldSets[0], remainingCards)
                     if deadwood <= minDeadwood:
                         if deadwood < minDeadwood:
                             minDeadwood = deadwood
@@ -87,7 +91,6 @@ class SimpleGinRummyAgent(object):
                     return discard.getId() + 58
                 else:
                     # Discard
-                    # print('Discard', discard.getId())
                     # print('Discard', discard)
                     return discard.getId() + 6
         # state is 4, declare dead hand (or other, decide randomly)

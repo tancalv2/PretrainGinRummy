@@ -215,7 +215,13 @@ class GinRummyUtil:
 				melded.append(card)
 		deadwoodPoints = 0
 		for card in hand:
-			if card not in melded:
+			cardInMeld = False
+			# 2021-02-16: modified since object comparison did not work 
+			for c in melded:
+				if str(card) == str(c):
+					cardInMeld = True
+					continue
+			if not cardInMeld:
 				deadwoodPoints += GinRummyUtil.DEADWOOD_POINTS[card.rank]
 		return deadwoodPoints
 

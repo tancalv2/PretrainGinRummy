@@ -110,6 +110,8 @@ def load_model(lr=0.001, input_size=None, output_size=None, model_fnc='MLP_base'
 
     if model_fnc == 'MLP_2HL':
         model = MLP_2HL(input_size, output_size, activation).to(device)
+    elif model_fnc == 'MLP_3HL':
+        model = MLP_3HL(input_size, output_size, activation).to(device)
     else:
         model = MLP_base(input_size, output_size, activation).to(device)
 

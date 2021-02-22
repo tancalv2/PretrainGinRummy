@@ -1,0 +1,26 @@
+State: all
+Action: all
+
+model_name: all_states_all_actions_2hl_extra_knock_data_80K_2K_base
+
+numGames: 2000
+
+pruneStatesList: []
+actionChoice: all
+balance: False
+
+batch_size: 1000
+lr: 0.001
+epochs: 200
+
+model_fnc: MLP_2HL
+activation: sig
+
+loss: MSE
+loss_weight: None
+
+pre_train: False
+model_PT: 
+
+device: cuda
+multi_data_pth: {'First Path': {'data_pth': '/content/drive/MyDrive/Colab Notebooks/Thesis/data/apbd/knock', 'numGames': 8000}, 'Second Path': {'data_pth': '/content/drive/MyDrive/Colab Notebooks/Thesis/data/apbd/knock', 'numGames': 32000}, 'Third Path': {'data_pth': '/content/drive/MyDrive/Colab Notebooks/Thesis/data/apbd/knock', 'numGames': 40000}}

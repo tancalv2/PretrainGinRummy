@@ -46,6 +46,22 @@ class Logger(object):
         self.log('  timestep     |  ' + str(timestep))
         self.log('  reward       |  ' + str(reward))
         self.log('----------------------------------------')
+    
+    # 2021-02-22: Add actions into logs
+    def log_performance2(self, timestep, reward, actions):
+        ''' Log a point in the curve
+        Args:
+            timestep (int): the timestep of the current point
+            reward (float): the reward of the current point
+            actions (float): the reward of the current point
+        '''
+        self.writer.writerow({'timestep': timestep, 'reward': reward})
+        print('')
+        self.log('----------------------------------------')
+        self.log('  timestep     |  ' + str(timestep))
+        self.log('  reward       |  ' + str(reward))
+        self.log(str(actions))
+        self.log('----------------------------------------')
 
     def plot(self, algorithm):
         plot(self.csv_path, self.fig_path, algorithm)

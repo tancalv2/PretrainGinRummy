@@ -404,6 +404,7 @@ def tournament(env, num):
 
 
 # 2021-02-22: Add tourament2 to return actions of agent0
+# 2021-02-24: modified tournament2 to return total turns knock is a legal action
 def tournament2(env, num):
     ''' Evaluate the performance of the agents in the environment
     Args:
@@ -411,25 +412,33 @@ def tournament2(env, num):
         num (int): The number of games to play.
 
     Returns:
-        A dictionary of actions from player 0 for num number of games
+        A dictionary of actions from player 0 for num number of games,
+        average game length, and total legal knock actions
     '''
     # Gin, Knock, Other
+    id = 0
     actions = {'Gin':0,
                'Knock': 0,
-               'Other': 0}
+               'Other': 0,
+               'Knock_Possible': 0,
+               'Avg Turns': 0}
+    tot_turns = 0
     counter = 0
     while counter < num:
         ts, _ = env.run(is_training=False)
-        try:
-            # player 0, action before SCORE_ACTION, Action of the (S,A,R,S') tuple
-            last_action = ts[0][-2][1]
-            if last_action == 5:
-                actions['Gin'] += 1
-            elif last_action >= 58:
-                actions['Knock'] += 1
-            else:
-                actions['Other'] += 1
-            counter += 1
-        except:
-            pass
+        turns = len(ts[id])
+        for i in range(turns):
+            action = ts[id][i][1] 
+            legal_actions = ts[id][i][0]['legal_actions']
+            try:
+                legal_actions_knock = [a for a in legal_actions if a >= 58]
+                actions['Knock_Possible'] += int(len(legal_actions_knock) > 0)
+                actions['Knock'] += int(action >= 58)
+                actions['Gin'] += int(action == 5)
+                tot_turns += 1
+            except:
+                pass
+        counter += 1;
+    actions['Other'] = num - actions['Knock'] - actions['Gin']
+    actions['Avg Turns'] = tot_turns / num
     return actions

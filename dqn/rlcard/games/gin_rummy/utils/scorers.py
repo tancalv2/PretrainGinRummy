@@ -124,7 +124,7 @@ def get_payoff_gin_rummy_v3(player: GinRummyPlayer, game: 'GinRummyGame') -> flo
         payoff (int or float): payoff for player (higher is better)
     '''
     # payoff is 1.0 if player gins
-    # payoff is 0.4 if player knocks
+    # payoff is 1.0 if player knocks
     # payoff is -deadwood_count / 100 if otherwise
     # The goal is to have the agent learn how to knock and gin.
     # The negative payoff when the agent fails to knock or gin should encourage the agent to form melds.
@@ -141,4 +141,60 @@ def get_payoff_gin_rummy_v3(player: GinRummyPlayer, game: 'GinRummyGame') -> flo
         best_meld_cluster = [] if not best_meld_clusters else best_meld_clusters[0]
         deadwood_count = utils.get_deadwood_count(hand, best_meld_cluster)
         payoff = -deadwood_count / 100
+    return payoff
+
+# increased payoff for knock action (10)
+def get_payoff_gin_rummy_v4(player: GinRummyPlayer, game: 'GinRummyGame') -> float:
+    ''' Get the payoff of player:
+            a) 1.0 if player gins
+            b) 10.0 if player knocks
+            c) -deadwood_count / 100 otherwise
+
+    Returns:
+        payoff (int or float): payoff for player (higher is better)
+    '''
+    # payoff is 1.0 if player gins
+    # payoff is 10.0 if player knocks
+    # payoff is -deadwood_count / 100 if otherwise
+    # The goal is to have the agent learn how to knock and gin.
+    # The negative payoff when the agent fails to knock or gin should encourage the agent to form melds.
+    # The payoff is scaled to lie between -1 and 1.
+    going_out_action = game.round.going_out_action
+    going_out_player_id = game.round.going_out_player_id
+    if going_out_player_id == player.player_id and isinstance(going_out_action, KnockAction):
+        payoff = 10
+    elif going_out_player_id == player.player_id and isinstance(going_out_action, GinAction):
+        payoff = 1
+    else:
+        hand = player.hand
+        best_meld_clusters = melding.get_best_meld_clusters(hand=hand)
+        best_meld_cluster = [] if not best_meld_clusters else best_meld_clusters[0]
+        deadwood_count = utils.get_deadwood_count(hand, best_meld_cluster)
+        payoff = -deadwood_count / 100
+    return payoff
+
+# increased payoff for knock action (10), no negative deadwood
+def get_payoff_gin_rummy_v5(player: GinRummyPlayer, game: 'GinRummyGame') -> float:
+    ''' Get the payoff of player:
+            a) 1.0 if player gins
+            b) 10.0 if player knocks
+            c) 0 o.w.
+
+    Returns:
+        payoff (int or float): payoff for player (higher is better)
+    '''
+    # payoff is 1.0 if player gins
+    # payoff is 10.0 if player knocks
+    # payoff is 0 otherwise
+    # The goal is to have the agent learn how to knock and gin.
+    # The negative payoff when the agent fails to knock or gin should encourage the agent to form melds.
+    # The payoff is scaled to lie between -1 and 1.
+    going_out_action = game.round.going_out_action
+    going_out_player_id = game.round.going_out_player_id
+    if going_out_player_id == player.player_id and isinstance(going_out_action, KnockAction):
+        payoff = 10
+    elif going_out_player_id == player.player_id and isinstance(going_out_action, GinAction):
+        payoff = 1
+    else:
+        payoff = 0
     return payoff

@@ -19,6 +19,8 @@ class Logger(object):
         self.fig_path2 = os.path.join(log_dir, env + 'fig2.png')
         # plot cond(knock) vs. timestep
         self.fig_path3 = os.path.join(log_dir, env + 'fig3.png')
+        # plot gin/knock/knocks_avail vs. timestep
+        self.fig_path4 = os.path.join(log_dir, env + 'fig4.png')
 
         if not os.path.exists(log_dir):
             os.makedirs(log_dir)
@@ -29,7 +31,8 @@ class Logger(object):
         self.writer = csv.DictWriter(self.csv_file, fieldnames=fieldnames)
         # self.writer.writeheader()
 
-        fieldnames2 = ['timestep', 'reward', 'Avg Turns', 'Cond_Knock']
+        # fieldnames2 = ['timestep', 'reward', 'Avg Turns', 'Cond_Knock']
+        fieldnames2 = ['timestep', 'reward', 'Avg Turns', 'Gin', 'Knock', 'Knock_Possible', 'Cond_Knock']
         self.writer2 = csv.DictWriter(self.csv_file, fieldnames=fieldnames2)
         self.writer2.writeheader()
 
@@ -65,7 +68,9 @@ class Logger(object):
         '''
         Cond_Knock = actions['Knock'] / actions['Knock_Possible'] if actions['Knock_Possible'] > 0  else 0
         self.writer2.writerow({'timestep': timestep, 'reward': reward,
-                               'Avg Turns': actions['Avg Turns'], 'Cond_Knock': Cond_Knock})
+                               'Avg Turns': actions['Avg Turns'],
+                               'Gin': actions['Gin'], 'Knock': actions['Knock'],
+                               'Knock_Possible': actions['Knock_Possible'], 'Cond_Knock': Cond_Knock})
         print('')
         self.log('----------------------------------------')
         self.log('  timestep     |  ' + str(timestep))
@@ -81,7 +86,9 @@ class Logger(object):
     def plot2(self, algorithm):
         plot(self.csv_path, self.fig_path, algorithm, ylabel='reward')
         plot(self.csv_path, self.fig_path2, algorithm, ylabel='Avg Turns')
-        plot(self.csv_path, self.fig_path3, algorithm, ylabel='Cond_Knock')
+        # plot(self.csv_path, self.fig_path3, algorithm, ylabel='Cond_Knock')
+        plot_condknock(self.csv_path, self.fig_path3)
+        plot_actions(self.csv_path, self.fig_path4)
 
     def close_files(self):
         ''' Close the created file objects
@@ -106,6 +113,70 @@ def plot(csv_path, save_path, algorithm, ylabel='reward'):
         fig, ax = plt.subplots()
         ax.plot(xs, ys, label=algorithm)
         ax.set(xlabel='timestep', ylabel=ylabel)
+        ax.legend()
+        ax.grid()
+
+        save_dir = os.path.dirname(save_path)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        fig.savefig(save_path)
+
+def plot_condknock(csv_path, save_path):
+    ''' Read data from csv file and plot the results
+    '''
+    import matplotlib.pyplot as plt
+    with open(csv_path) as csvfile:
+        print(csv_path)
+        reader = csv.DictReader(csvfile)
+        xs = []
+        ys = []
+        # knocks = []
+        for row in reader:
+            xs.append(int(row['timestep']))
+            ys.append(float(row['Cond_Knock']))
+            # knocks.append(float(row['Knock']))
+        fig, ax = plt.subplots()
+        ax.plot(xs, ys, label='Cond_Knock')
+        # lns1 = ax.plot(xs, ys, label='Cond_Knock')
+        ax.set(xlabel='timestep', ylabel='Cond_Knock')
+        # ax2 = ax.twinx()
+        # lns2 = ax2.plot(xs, knocks, label='Knock', color='red')
+        # ax2.set(xlabel='timestep', ylabel='Count')
+        
+        # lns = lns1+lns2
+        # labs = [l.get_label() for l in lns]
+        # ax.legend(lns, labs)
+        ax.legend()
+        ax.grid()
+
+        save_dir = os.path.dirname(save_path)
+        if not os.path.exists(save_dir):
+            os.makedirs(save_dir)
+
+        fig.savefig(save_path)
+
+def plot_actions(csv_path, save_path):
+    ''' Read data from csv file and plot the results
+    '''
+    import matplotlib.pyplot as plt
+    with open(csv_path) as csvfile:
+        print(csv_path)
+        reader = csv.DictReader(csvfile)
+        xs = []
+        gins = []
+        knocks = []
+        # Knock_Possible = []
+        for row in reader:
+            xs.append(int(row['timestep']))
+            gins.append(float(row['Gin']))
+            knocks.append(float(row['Knock']))
+            # Knock_Possible.append(float(row['Knock_Possible']))
+        fig, ax = plt.subplots()
+        ax.plot(xs, gins, label='Gin', color='blue')
+        ax.plot(xs, knocks, label='Knock', color='red')
+        # ax.plot(xs, Knock_Possible, label='Knock_Possible', color='green')
+        ax.set(xlabel='timestep', ylabel='Count')
         ax.legend()
         ax.grid()
 

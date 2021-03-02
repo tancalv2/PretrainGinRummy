@@ -184,8 +184,9 @@ class Env(object):
         if self.single_agent_mode:
             raise ValueError('Run in single agent not allowed.')
 
-        MAX_TURNS = 5000
+        MAX_TURNS = 200
         numTurns = 0
+        numResets = 0
 
         trajectories = [[] for _ in range(self.player_num)]
         state, player_id = self.reset()
@@ -197,7 +198,10 @@ class Env(object):
             numTurns += 1
             if numTurns > MAX_TURNS:
                 # reset the environment, stuck in infinite loop
-                print('\nOopsie, stuck in infinite loop... reset time\n')
+                numResets += 1
+                if numResets%1000 == 0:
+                    print('\nReset {}'.format(numResets))
+                # print('\nStuck in infinite loop... reset time')
                 numTurns = 0
                 trajectories = [[] for _ in range(self.player_num)]
                 state, player_id = self.reset()
@@ -232,6 +236,9 @@ class Env(object):
 
         # Reorganize the trajectories
         trajectories = reorganize(trajectories, payoffs)
+
+        if numResets > 10:
+            print('\nTotal Number Resets: {}'.format(numResets))
 
         return trajectories, payoffs
 

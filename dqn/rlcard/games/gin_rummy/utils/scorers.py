@@ -198,3 +198,81 @@ def get_payoff_gin_rummy_v5(player: GinRummyPlayer, game: 'GinRummyGame') -> flo
     else:
         payoff = 0
     return payoff
+
+# increased payoff for knock action (1000), no negative deadwood
+def get_payoff_gin_rummy_v6(player: GinRummyPlayer, game: 'GinRummyGame') -> float:
+    ''' Get the payoff of player:
+            a) 1.0 if player gins
+            b) 1000.0 if player knocks
+            c) 0 o.w.
+
+    Returns:
+        payoff (int or float): payoff for player (higher is better)
+    '''
+    # payoff is 1.0 if player gins
+    # payoff is 1000.0 if player knocks
+    # payoff is 0 otherwise
+    # The goal is to have the agent learn how to knock and gin.
+    # The negative payoff when the agent fails to knock or gin should encourage the agent to form melds.
+    # The payoff is scaled to lie between -1 and 1.
+    going_out_action = game.round.going_out_action
+    going_out_player_id = game.round.going_out_player_id
+    if going_out_player_id == player.player_id and isinstance(going_out_action, KnockAction):
+        payoff = 1000
+    elif going_out_player_id == player.player_id and isinstance(going_out_action, GinAction):
+        payoff = 1
+    else:
+        payoff = 0
+    return payoff
+
+# increased payoff for knock action (10), no negative deadwood, no gin reward
+def get_payoff_gin_rummy_v7(player: GinRummyPlayer, game: 'GinRummyGame') -> float:
+    ''' Get the payoff of player:
+            a) 0 if player gins
+            b) 10.0 if player knocks
+            c) 0 o.w.
+
+    Returns:
+        payoff (int or float): payoff for player (higher is better)
+    '''
+    # payoff is 0 if player gins
+    # payoff is 10.0 if player knocks
+    # payoff is 0 otherwise
+    # The goal is to have the agent learn how to knock and gin.
+    # The negative payoff when the agent fails to knock or gin should encourage the agent to form melds.
+    # The payoff is scaled to lie between -1 and 1.
+    going_out_action = game.round.going_out_action
+    going_out_player_id = game.round.going_out_player_id
+    if going_out_player_id == player.player_id and isinstance(going_out_action, KnockAction):
+        payoff = 10
+    elif going_out_player_id == player.player_id and isinstance(going_out_action, GinAction):
+        payoff = 0
+    else:
+        payoff = 0
+    return payoff
+
+# increased payoff for knock action (1000), no negative deadwood, no gin reward
+def get_payoff_gin_rummy_v8(player: GinRummyPlayer, game: 'GinRummyGame') -> float:
+    ''' Get the payoff of player:
+            a) 0 if player gins
+            b) 1000.0 if player knocks
+            c) 0 o.w.
+
+    Returns:
+        payoff (int or float): payoff for player (higher is better)
+    '''
+    # payoff is 0 if player gins
+    # payoff is 1000.0 if player knocks
+    # payoff is 0 otherwise
+    # The goal is to have the agent learn how to knock and gin.
+    # The negative payoff when the agent fails to knock or gin should encourage the agent to form melds.
+    # The payoff is scaled to lie between -1 and 1.
+    going_out_action = game.round.going_out_action
+    going_out_player_id = game.round.going_out_player_id
+    if going_out_player_id == player.player_id and isinstance(going_out_action, KnockAction):
+        payoff = 1000
+    elif going_out_player_id == player.player_id and isinstance(going_out_action, GinAction):
+        payoff = 0
+    else:
+        payoff = 0
+    return payoff

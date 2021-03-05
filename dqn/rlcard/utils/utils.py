@@ -442,3 +442,56 @@ def tournament2(env, num):
     actions['Other'] = num - actions['Knock'] - actions['Gin']
     actions['Avg Turns'] = tot_turns / num
     return actions
+
+# 2021-03-04: create tournament3 to return both actions and reward to reduce overhead
+def tournament3(env, num):
+    ''' Evaluate the performance of the agents in the environment
+    Args:
+        env (Env class): The environment to be evaluated.
+        num (int): The number of games to play.
+
+    Returns:
+        A list of avrage payoffs for each player
+        A dictionary of actions from player 0 for num number of games,
+        average game length, and total legal knock actions
+    '''
+    # Gin, Knock, Other
+    id = 0
+    actions = {'Gin':0,
+               'Knock': 0,
+               'Other': 0,
+               'Knock_Possible': 0,
+               'Avg Turns': 0}
+    payoffs = [0 for _ in range(env.player_num)]
+    tot_turns = 0
+    counter = 0
+    while counter < num:
+        ts, _payoffs = env.run(is_training=False)
+        
+        # increment payoffs, from tournament
+        for i, _ in enumerate(payoffs):
+            payoffs[i] += _payoffs[i]
+
+        # record actions, from tournament2
+        turns = len(ts[id])
+        for i in range(turns):
+            action = ts[id][i][1] 
+            legal_actions = ts[id][i][0]['legal_actions']
+            try:
+                legal_actions_knock = [a for a in legal_actions if a >= 58]
+                actions['Knock_Possible'] += int(len(legal_actions_knock) > 0)
+                actions['Knock'] += int(action >= 58)
+                actions['Gin'] += int(action == 5)
+                tot_turns += 1
+            except:
+                pass
+        counter += 1
+    
+    # average the payoffs
+    for i, _ in enumerate(payoffs):
+        payoffs[i] /= counter
+
+    # calculate the other actions
+    actions['Other'] = num - actions['Knock'] - actions['Gin']
+    actions['Avg Turns'] = tot_turns / counter
+    return payoffs, actions

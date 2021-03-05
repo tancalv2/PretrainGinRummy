@@ -25,6 +25,7 @@ SOFTWARE.
 Change Log
 2021-01-05      added extra parameter 'batch_norm' to DQNAgent, Estimator, EstimatorNetwork classes
                 to allow user to select if want prior batch normalization
+2021-03-04      artificially increased probability of knocking actions by introducing additional layer
 '''
 
 import numpy as np
@@ -60,7 +61,8 @@ class DQNAgent(object):
                  mlp_layers=None,
                  learning_rate=0.00005,
                  device=None,
-                 batch_norm=False):
+                 batch_norm=False,
+                 knock_layer=False):
 
         '''
         Q-Learning algorithm for off-policy TD control using Function Approximation.
@@ -96,6 +98,7 @@ class DQNAgent(object):
         self.action_num = action_num
         self.train_every = train_every
         self.batch_norm = batch_norm
+        self.knock_layer = knock_layer
 
         # Torch device
         if device is None:
@@ -114,9 +117,9 @@ class DQNAgent(object):
 
         # Create estimators
         self.q_estimator = Estimator(action_num=action_num, learning_rate=learning_rate, state_shape=state_shape, \
-            mlp_layers=mlp_layers, device=self.device, batch_norm=self.batch_norm)
+            mlp_layers=mlp_layers, device=self.device, batch_norm=self.batch_norm, knock_layer=self.knock_layer)
         self.target_estimator = Estimator(action_num=action_num, learning_rate=learning_rate, state_shape=state_shape, \
-            mlp_layers=mlp_layers, device=self.device, batch_norm=self.batch_norm)
+            mlp_layers=mlp_layers, device=self.device, batch_norm=self.batch_norm, knock_layer=self.knock_layer)
 
         # Create replay memory
         self.memory = Memory(replay_memory_size, batch_size)
@@ -244,7 +247,7 @@ class Estimator(object):
     This network is used for both the Q-Network and the Target Network.
     '''
 
-    def __init__(self, action_num=2, learning_rate=0.001, state_shape=None, mlp_layers=None, device=None, batch_norm=False):
+    def __init__(self, action_num=2, learning_rate=0.001, state_shape=None, mlp_layers=None, device=None, batch_norm=False, knock_layer=False):
         ''' Initilalize an Estimator object.
         Args:
             action_num (int): the number output actions
@@ -260,7 +263,7 @@ class Estimator(object):
         self.batch_norm = batch_norm
 
         # set up Q model and place it in eval mode
-        qnet = EstimatorNetwork(action_num, state_shape, mlp_layers, batch_norm)
+        qnet = EstimatorNetwork(action_num, state_shape, mlp_layers, batch_norm, knock_layer)
         qnet = qnet.to(self.device)
         self.qnet = qnet
         self.qnet.eval()
@@ -334,7 +337,7 @@ class EstimatorNetwork(nn.Module):
         (OLD) It is just a series of tanh layers. All in/out are torch.tensor
     '''
 
-    def __init__(self, action_num=2, state_shape=None, mlp_layers=None, batch_norm=False):
+    def __init__(self, action_num=2, state_shape=None, mlp_layers=None, batch_norm=False, knock_layer=False):
         ''' Initialize the Q network
         Args:
             action_num (int): number of legal actions
@@ -347,6 +350,7 @@ class EstimatorNetwork(nn.Module):
         self.state_shape = state_shape
         self.mlp_layers = mlp_layers
         self.batch_norm = batch_norm
+        self.knock_layer = knock_layer
 
         # build the Q network
         layer_dims = [np.prod(self.state_shape)] + self.mlp_layers
@@ -358,6 +362,12 @@ class EstimatorNetwork(nn.Module):
             fc.append(nn.Sigmoid())
         fc.append(nn.Linear(layer_dims[-1], self.action_num, bias=True))
         fc.append(nn.Softmax(dim=1))
+        # add knock layer to be an additional layer, which will manually be set identity
+        # with bias on the knock actions (58-110)
+        # required to be frozen!!!
+        if knock_layer:
+            fc.append(nn.Linear(self.action_num, self.action_num, bias=True))
+            fc.append(nn.Softmax(dim=1))
         self.fc_layers = nn.Sequential(*fc)
 
     def forward(self, s):

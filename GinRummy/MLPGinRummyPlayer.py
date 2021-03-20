@@ -72,18 +72,6 @@ class MLPGinRummyPlayer(GinRummyPlayer):
         self.knock = False
         self.playVerbose = False
 
-
-
-    # def willDrawFaceUpCard(self, card: Card) -> bool:
-    #     # Return true if card would be a part of a meld, false otherwise.
-    #     self.faceUpCard = card
-    #     newCards = list(self.cards)
-    #     newCards.append(card)
-    #     for meld in GinRummyUtil.cardsToAllMelds(newCards):
-    #         if card in meld:
-    #             return True
-    #     return False
-
     # Return whether or not player will draw the given face-up card on the draw pile.
     def willDrawFaceUpCard(self, card: Card) -> bool:
         self.faceUpCard = card
@@ -102,9 +90,6 @@ class MLPGinRummyPlayer(GinRummyPlayer):
         # print('Draw from Deck Action')
         self.faceUpCardBool = False
         return False
-
-
-
 
     # Report that the given player has drawn a given card and, if known, what the card is.
     # If the card is unknown because it is drawn from the face-down draw pile, the drawnCard is null.
@@ -158,20 +143,34 @@ class MLPGinRummyPlayer(GinRummyPlayer):
         # APBD, either either discard or knock...
         # determine the allowable actions (which cards can be discarded/knocked on)
         currHand = np.array(self.state[0:52])
+        knockCards = np.array(self.state[0:52])
         # if self.playVerbose:
         #     print('Current Hand:', un_one_hot(currHand))
         # disallow discarding PickUp FaceUp/Discarded Card
         if self.faceUpCardBool:
         # if self.drawnCard == self.faceUpCard:
             currHand[self.drawnCard.getId()] = 0
+            knockCards[self.drawnCard.getId()] = 0
         
+        # prune illegal knock actions
+        cardIndex = np.where(knockCards == 1)[0]
+        for c in cardIndex:
+            remainingCards = list(self.cards)
+            remainingCards.remove(Deck.getCard(c))
+            bestMeldSets = GinRummyUtil.cardsToBestMeldSets(remainingCards)
+            deadwood = GinRummyUtil.getDeadwoodPoints3(remainingCards) if len(bestMeldSets) == 0 \
+                else GinRummyUtil.getDeadwoodPoints1(bestMeldSets[0], remainingCards)
+            if deadwood > 10:
+                knockCards[c] = 0
+
         state = np.expand_dims(self.state, axis=0)
         state = torch.from_numpy(state).type(torch.FloatTensor).to(device)
         action = self.model(state)
         action = action.detach().numpy().reshape(-1)
 
         discardMax = max(currHand * action[6:58])
-        knockMax = max(currHand * action[58:110])
+        # knockMax = max(currHand * action[58:110])
+        knockMax = max(knockCards * action[58:110])
 
         if self.playVerbose:
             unmeldedCards = self.cards.copy()
@@ -186,12 +185,14 @@ class MLPGinRummyPlayer(GinRummyPlayer):
                 melds = unmeldedCards
             print('Current Hand:', melds)
             if np.argmax(action) > 58:
-                print('Knock', all_classes[np.argmax(action)], '| D:', Deck.getCard(np.argmax(currHand * action[6:58])), '| K:', Deck.getCard(np.argmax(currHand * action[58:])), '|', np.argmax(action))
+                # print('Knock', all_classes[np.argmax(action)], '| D:', Deck.getCard(np.argmax(currHand * action[6:58])), '| K:', Deck.getCard(np.argmax(currHand * action[58:])), '|', np.argmax(action))
+                print('Knock', all_classes[np.argmax(action)], '| D:', Deck.getCard(np.argmax(currHand * action[6:58])), '| K:', Deck.getCard(np.argmax(knockCards * action[58:])), '|', np.argmax(action))
             else:
-                print('Discard', all_classes[np.argmax(action)], '| D:', Deck.getCard(np.argmax(currHand * action[6:58])), '| K:', Deck.getCard(np.argmax(currHand * action[58:])), '|', np.argmax(action))
+                # print('Discard', all_classes[np.argmax(action)], '| D:', Deck.getCard(np.argmax(currHand * action[6:58])), '| K:', Deck.getCard(np.argmax(currHand * action[58:])), '|', np.argmax(action))
+                print('Discard', all_classes[np.argmax(action)], '| D:', Deck.getCard(np.argmax(currHand * action[6:58])), '| K:', Deck.getCard(np.argmax(knockCards * action[58:])), '|', np.argmax(action))
             print('MAX:{:.4f}, {:.4f}'.format(discardMax, knockMax))
 
-        if discardMax > knockMax:
+        if discardMax > knockMax or int(sum(knockCards) == 0):
             if self.playVerbose:
                 print('Discard Action')
             self.knock = False
@@ -200,7 +201,8 @@ class MLPGinRummyPlayer(GinRummyPlayer):
             if self.playVerbose:
                 print('Knock Action')
             self.knock = True
-            return Deck.getCard(np.argmax(currHand * action[58:]))
+            # return Deck.getCard(np.argmax(currHand * action[58:]))
+            return Deck.getCard(np.argmax(knockCards * action[58:]))
 
 
 

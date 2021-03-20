@@ -165,7 +165,7 @@ class Env(object):
                 self.allow_raw_data = True
                 break
 
-    def run(self, is_training=False):
+    def run(self, is_training=False, verbose=False):
         '''
         Run a complete game, either for evaluation or training RL agent.
 
@@ -201,7 +201,6 @@ class Env(object):
                 numResets += 1
                 if numResets%1000 == 0:
                     print('\nReset {}'.format(numResets))
-                # print('\nStuck in infinite loop... reset time')
                 numTurns = 0
                 trajectories = [[] for _ in range(self.player_num)]
                 state, player_id = self.reset()
@@ -237,7 +236,7 @@ class Env(object):
         # Reorganize the trajectories
         trajectories = reorganize(trajectories, payoffs)
 
-        if numResets > 10:
+        if numResets > 10 and verbose:
             print('\nTotal Number Resets: {}'.format(numResets))
 
         return trajectories, payoffs

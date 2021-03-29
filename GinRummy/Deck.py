@@ -28,7 +28,7 @@ class Deck:
     suitNames = ['S', 'H', 'D', 'C']#["C", "H", "S", "D"]
     
     # Parallel array to suitNames indicating whether or not the corresponding suit is red.
-    isSuitRed = [False, True, False, True]
+    isSuitRed = [False, True, True, False]#[False, True, False, True]
 
     # Number of card ranks.
     NUM_RANKS = len(rankNames)

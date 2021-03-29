@@ -110,6 +110,14 @@ def load_model(lr=0.001, input_size=None, output_size=None, model_fnc='MLP_base'
 
     if model_fnc == 'MLP_2HL':
         model = MLP_2HL(input_size, output_size, activation).to(device)
+    elif model_fnc == 'MLP_3HL':
+        model = MLP_3HL(input_size, output_size, activation).to(device)
+    elif model_fnc == 'MLP_4HL':
+        model = MLP_4HL(input_size, output_size, activation).to(device)
+    elif model_fnc == 'MLP_4HL2':    
+        model = MLP_4HL2(input_size, output_size, activation).to(device)
+    elif model_fnc == 'MLP_2HL_wide':    
+        model = MLP_2HL_wide(input_size, output_size, activation).to(device)
     else:
         model = MLP_base(input_size, output_size, activation).to(device)
 
@@ -147,6 +155,7 @@ def evaluate(model, data_loader, loss_fnc=torch.nn.MSELoss(), loss='MSE', device
 
         corr = pred == target
         total_corr += int(corr.sum())
+        del data
 
     acc = float(total_corr)/len(data_loader.dataset)
     loss = accum_loss/(i+1)
@@ -191,6 +200,8 @@ def train(train_loader, val_loader, plot_pth, batch_size=1000, lr=0.001, epochs=
 
             corr = pred == target
             total_corr += int(corr.sum())
+
+            del data
 
         # evaluate per epoch
         vacc, vloss = evaluate(model, val_loader, loss_fnc, loss, device)
